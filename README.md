@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tivaouane-AI
 
-## Getting Started
+Assistant intelligent et guide interactif de la ville de Tivaouane : lieux,
+patrimoine et histoire, nourris par une base de connaissances locale.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- [Next.js](https://nextjs.org) (App Router) + TypeScript
+- [Tailwind CSS](https://tailwindcss.com) v4
+- ESLint (`eslint-config-next`)
+
+## Structure du projet
+
+```
+├── app/                  # Routes et pages (App Router)
+│   └── api/              # API Routes (chat, search — à venir)
+├── components/
+│   ├── ui/               # Composants UI génériques
+│   ├── assistant/        # Composants du chat
+│   ├── map/              # Composants cartographiques
+│   └── layout/           # Navigation, footer, etc.
+├── lib/                  # Logique applicative (AI, RAG, DB — à venir)
+├── data/
+│   └── knowledge/        # Contenu source (lieux, patrimoine, histoire)
+├── public/
+│   ├── images/
+│   └── icons/
+├── scripts/              # Scripts d'outillage (ingestion de contenu — à venir)
+└── types/                # Types TypeScript partagés
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Commandes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev      # Serveur de développement
+npm run build    # Build de production
+npm run start    # Serveur de production
+npm run lint     # ESLint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Variables d'environnement
 
-## Learn More
+Copier `.env.example` vers `.env.local` et ajuster les valeurs :
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Description | Requise |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | URL publique du site (SEO, OpenGraph) | Oui |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Les clés d'API (LLM, bases de données, etc.) seront ajoutées ici lors des
+phases ultérieures — elles ne sont jamais exposées côté client.

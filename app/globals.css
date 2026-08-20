@@ -1,26 +1,328 @@
 @import "tailwindcss";
 
+/*
+ * 🕌 Tivaouane-AI · Design Token
+ * ------------------------------
+ * Identité visuelle inspirée de Tivaouane :
+ * vert émeraude sénégalais, or du patrimoine, terracotta des cases et
+ * sables chauds de la région de Thiès.
+ *
+ * Architecture :
+ * 1. @theme inline → tokens « sémantiques » (basculent en mode sombre)
+ * 2. @theme → échelles de marque statiques (gold, terracotta, sand, night)
+ * 3. @layer base → styles globaux (typo, focus, accessibilité)
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+ * 1. Tokens sémantiques — évoluent avec le mode (clair / sombre)
+ * ------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --background: #fbf8f2; /* sable clair */
+  --foreground: #1c1a15; /* encre chaude */
+  --card: #ffffff;
+  --card-foreground: #1c1a15;
+  --popover: #ffffff;
+  --popover-foreground: #1c1a15;
+
+  /* Primaire — vert émeraude profond */
+  --primary: #0b5a3a;
+  --primary-foreground: #f4fbf6;
+  --secondary: #efe7d8; /* sable */
+  --secondary-foreground: #262117;
+
+  /* Muted */
+  --muted: #f2ede2;
+  --muted-foreground: #6e675a;
+
+  /* Accent — or patrimonial */
+  --accent: #c79a3b;
+  --accent-foreground: #221a06;
+
+  --destructive: #b93c30;
+  --destructive-foreground: #ffffff;
+
+  /* Bordures & focus */
+  --border: #e4dccd;
+  --input: #d9cfbc;
+  --ring: #0b5a3a;
+}
+
+/* Mode sombre — bascule automatique ou forcée (classe `.dark` / `.light`). */
+.dark {
+  --background: #0f140f;
+  --foreground: #ece8df;
+  --card: #171d17;
+  --card-foreground: #ece8df;
+  --popover: #171d17;
+  --popover-foreground: #ece8df;
+
+  --primary: #3bb778;
+  --primary-foreground: #0a2416;
+  --secondary: #232b22;
+  --secondary-foreground: #ece8df;
+
+  --muted: #1d241c;
+  --muted-foreground: #9aa295;
+
+  --accent: #e0b54e;
+  --accent-foreground: #211806;
+
+  --destructive: #e2584a;
+  --destructive-foreground: #ffffff;
+
+  --border: #293129;
+  --input: #384238;
+  --ring: #3bb778;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: #0f140f;
+    --foreground: #ece8df;
+    --card: #171d17;
+    --card-foreground: #ece8df;
+    --popover: #171d17;
+    --popover-foreground: #ece8df;
+
+    --primary: #3bb778;
+    --primary-foreground: #0a2416;
+    --secondary: #232b22;
+    --secondary-foreground: #ece8df;
+
+    --muted: #1d241c;
+    --muted-foreground: #9aa295;
+
+    --accent: #e0b54e;
+    --accent-foreground: #211806;
+
+    --destructive: #e2584a;
+    --destructive-foreground: #ffffff;
+
+    --border: #293129;
+    --input: #384238;
+    --ring: #3bb778;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces), var(--font-geist-sans), ui-sans-serif,
+    system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ---------------------------------------------------------------------------
+ * 2. Échelles de marque statiques (identiques en mode clair / sombre)
+ * ------------------------------------------------------------------------- */
+@theme {
+  /* Or patrimonial */
+  --color-gold-50: #fbf6ea;
+  --color-gold-100: #f5ebce;
+  --color-gold-200: #ebd9a4;
+  --color-gold-300: #dfc174;
+  --color-gold-400: #d3ab4f;
+  --color-gold-500: #c79a3b;
+  --color-gold-600: #a87f2d;
+  --color-gold-700: #866225;
+  --color-gold-800: #6e4f22;
+  --color-gold-900: #5c431f;
+  --color-gold-950: #35260f;
+
+  /* Terracotta — briques & cases traditionnelles */
+  --color-terracotta-50: #fbf0ea;
+  --color-terracotta-100: #f6ddd0;
+  --color-terracotta-200: #ebcea0;
+  --color-terracotta-300: #dd9673;
+  --color-terracotta-400: #cf7049;
+  --color-terracotta-500: #b95430;
+  --color-terracotta-600: #a14324;
+  --color-terracotta-700: #833521;
+  --color-terracotta-800: #6d2e21;
+  --color-terracotta-900: #5b2920;
+  --color-terracotta-950: #32120c;
+
+  /* Sable — neutres chauds */
+  --color-sand-50: #faf7f0;
+  --color-sand-100: #f2ece0;
+  --color-sand-200: #e6dbc7;
+  --color-sand-300: #d4c4a6;
+  --color-sand-400: #c0a981;
+  --color-sand-500: #ad9164;
+  --color-sand-600: #97794e;
+  --color-sand-700: #7d6341;
+  --color-sand-800: #675139;
+  --color-sand-900: #554332;
+  --color-sand-950: #2e2418;
+
+  /* Nuit — vert encre pour les surfaces profondes */
+  --color-night-500: #1b2a1e;
+  --color-night-600: #152118;
+  --color-night-700: #101a13;
+  --color-night-800: #0c130e;
+  --color-night-900: #080d0a;
+
+  /* Statuts — fixes, lisibles dans les deux modes */
+  --color-success: #2e8b57;
+  --color-success-foreground: #ffffff;
+  --color-warning: #b97a1e;
+  --color-warning-foreground: #ffffff;
+  --color-info: #2f6e9e;
+  --color-info-foreground: #ffffff;
+
+  /* Typographie */
+  --text-hero: 3.5rem;
+  --text-hero--line-height: 1.05;
+  --text-hero--letter-spacing: -0.02em;
+
+  /* Radii — arrondis chaleureux */
+  --radius: 0.75rem;
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-4xl: 2.5rem;
+
+  /* Ombres — teintées de chaleur */
+  --shadow-xs: 0 1px 2px 0 rgb(28 22 10 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(28 22 10 / 0.08), 0 1px 2px -1px
+    rgb(28 22 10 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(28 22 10 / 0.09), 0 2px 4px -2px
+    rgb(28 22 10 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(28 22 10 / 0.1), 0 4px 6px -4px
+    rgb(28 22 10 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(28 22 10 / 0.12), 0 8px 10px -6px
+    rgb(28 22 10 / 0.05);
+  --shadow-2xl: 0 25px 50px -12px rgb(28 22 10 / 0.25);
+  --shadow-card: 0 2px 8px -2px rgb(33 24 10 / 0.08), 0 16px 32px -16px
+    rgb(33 24 10 / 0.16);
+  --shadow-card-hover: 0 8px 20px -6px rgb(33 24 10 / 0.14), 0 24px 48px -16px
+    rgb(33 24 10 / 0.2);
+  --shadow-gold: 0 12px 32px -12px rgb(199 154 59 / 0.5);
+
+  /* Animations */
+  --animate-fade-up: fade-up 0.5s ease-out both;
+  --animate-fade-in: fade-in 0.3s ease-out both;
+  --animate-scale-in: scale-in 0.2s ease-out both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------------------------------------------------------------------------
+ * 3. Base & accessibilité
+ * ------------------------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Focus visible global — accessible & cohérent */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--primary) 22%, transparent);
+  }
+
+  ::placeholder {
+    color: color-mix(in srgb, var(--muted-foreground) 75%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
