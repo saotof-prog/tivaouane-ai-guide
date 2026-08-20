@@ -21,7 +21,7 @@ export const mockPlaces: Place[] = [
     category: "religieux",
     description:
       "Fiche d’exemple de démonstration — description et informations pratiques à venir avec la base de connaissances.",
-    image: "/images/lieux/grande-mosquee.jpg",
+    image: "/images/la cite a explorer/l'esplandade des cérémonies .jpeg",
   },
   {
     id: "zawiya",
@@ -29,7 +29,7 @@ export const mockPlaces: Place[] = [
     category: "religieux",
     description:
       "Fiche d’exemple de démonstration — description et informations pratiques à venir avec la base de connaissances.",
-    image: "/images/lieux/zawiya.jpg",
+    image: "/images/la cite a explorer/le mauselee.jpeg",
   },
   {
     id: "marche-central",
@@ -37,7 +37,7 @@ export const mockPlaces: Place[] = [
     category: "marches",
     description:
       "Fiche d’exemple de démonstration — description et informations pratiques à venir avec la base de connaissances.",
-    image: "/images/lieux/marche-central.jpg",
+    image: "/images/la cite a explorer/le marche central.jpeg",
   },
   {
     id: "ateliers-artisanaux",

@@ -84,6 +84,8 @@ export type HeritageItem = {
   /** Marqueurs courts affichés en pastilles (ex. « Rassemblements »). */
   markers?: string[];
   sources?: Source[];
+  /** Chemin public de l'image d'illustration. */
+  image?: string;
 };
 
 /** Document brut de la future base de connaissances (RAG). */

@@ -2,20 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { getMockReply, mockSuggestedQuestions, type SuggestedQuestion } from "@/lib/mock/assistant";
-import type { ChatMessage as ChatMessageModel } from "@/types";
+import { mockSuggestedQuestions, type SuggestedQuestion } from "@/lib/mock/assistant";
+import type { ChatMessage as ChatMessageModel, ChatRequest, ChatResponse } from "@/types";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { SuggestedQuestions } from "./SuggestedQuestions";
 import { TypingIndicator } from "./TypingIndicator";
 
-const BOT_DELAY_MS = 900;
-
 const WELCOME_MESSAGE: ChatMessageModel = {
   id: "welcome",
   role: "assistant",
   content:
-    "Assalamou alaykoum ! Je suis l’assistant de Tivaouane AI Guide. Je vous aiderai bientôt à découvrir la ville, ses lieux, son histoire et ses traditions. Posez-moi une question pour tester l’interface.",
+    "Assalamou alaykoum ! Je suis l’assistant de Tivaouane AI Guide. Posez-moi une question sur la ville : son histoire, ses mosquées, son artisanat, ses restaurants ou ses événements.",
 };
 
 export function Chat() {
@@ -24,47 +22,55 @@ export function Chat() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isTyping]);
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
   function handleSend(text: string) {
     if (isTyping) return;
 
-    const userMessage = { id: crypto.randomUUID(), role: "user" as const, content: text };
+    const userMessage: ChatMessageModel = { id: crypto.randomUUID(), role: "user", content: text };
     setMessages((previous) => [...previous, userMessage]);
     setIsTyping(true);
     setErrorMessage(null);
 
-    timerRef.current = setTimeout(() => {
-      const answered = handleAsk(text);
-      if (!answered) return;
-      setIsTyping(false);
-    }, BOT_DELAY_MS);
+    void handleAsk(text);
   }
 
-  function handleAsk(text: string): boolean {
+  async function handleAsk(text: string) {
     try {
-      const reply = getMockReply(text);
-      setMessages((previous) => [
-        ...previous,
-        { id: crypto.randomUUID(), role: "assistant" as const, content: reply },
-      ]);
-      return true;
-    } catch {
+      const requestBody: ChatRequest = { message: text, history: messages };
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        let problem =
+          "Une erreur s’est produite lors de la génération de la réponse. Veuillez réessayer.";
+        try {
+          const body: unknown = await response.json();
+          const message =
+            typeof body === "object" && body !== null
+              ? (body as { error?: { message?: unknown } }).error?.message
+              : undefined;
+          if (typeof message === "string" && message) problem = message;
+        } catch {
+          // Le corps n’est pas exploitable : conserver le message par défaut.
+        }
+        throw new Error(problem);
+      }
+
+      const data = (await response.json()) as ChatResponse;
+      setMessages((previous) => [...previous, data.message]);
+    } catch (cause) {
       setErrorMessage(
-        "Une erreur s’est produite lors de la génération de la réponse. Veuillez réessayer.",
+        cause instanceof Error ? cause.message : "Une erreur est survenue. Veuillez réessayer.",
       );
+    } finally {
       setIsTyping(false);
-      return false;
     }
   }
 

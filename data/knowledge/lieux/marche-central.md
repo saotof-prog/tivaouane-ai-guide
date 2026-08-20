@@ -15,6 +15,7 @@ source:
 tags:
   - TODO
 updatedAt: 2026-08-20
+image: "/images/la cite a explorer/le marche central.jpeg"
 ---
 
 # TODO — Le marché central

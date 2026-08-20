@@ -39,6 +39,7 @@ export const mockHeritageArticles: HeritageItem[] = [
       },
     ],
     markers: ["Culte", "Rassemblements"],
+    image: "/images/la cite a explorer/l'esplandade des cérémonies .jpeg",
   },
   {
     id: "mausolees",
@@ -58,6 +59,7 @@ export const mockHeritageArticles: HeritageItem[] = [
       },
     ],
     markers: ["Visites", "Coutumes"],
+    image: "/images/la cite a explorer/le mauselee.jpeg",
   },
   {
     id: "magal",
@@ -77,6 +79,7 @@ export const mockHeritageArticles: HeritageItem[] = [
       },
     ],
     markers: ["Rassemblements", "Pèlerinage"],
+    image: "/images/la cite a explorer/grand gamou de tivaouane.jpeg",
   },
   {
     id: "histoire-de-la-cite",
