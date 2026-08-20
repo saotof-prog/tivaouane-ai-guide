@@ -60,6 +60,8 @@ export type Place = {
   category: PlaceCategoryId;
   /** Description d’exemple — aucune donnée vérifiée, à remplacer par la base de connaissances. */
   description: string;
+  /** Chemin public de l’image d’illustration (ex. « /images/lieux/monument.jpg »). */
+  image?: string;
   location?: GeographicCoordinates;
   sources?: Source[];
 };

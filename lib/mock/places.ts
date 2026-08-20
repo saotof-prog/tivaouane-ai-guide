@@ -21,6 +21,7 @@ export const mockPlaces: Place[] = [
     category: "religieux",
     description:
       "Fiche d’exemple de démonstration — description et informations pratiques à venir avec la base de connaissances.",
+    image: "/images/lieux/grande-mosquee.jpg",
   },
   {
     id: "zawiya",
@@ -28,6 +29,7 @@ export const mockPlaces: Place[] = [
     category: "religieux",
     description:
       "Fiche d’exemple de démonstration — description et informations pratiques à venir avec la base de connaissances.",
+    image: "/images/lieux/zawiya.jpg",
   },
   {
     id: "marche-central",

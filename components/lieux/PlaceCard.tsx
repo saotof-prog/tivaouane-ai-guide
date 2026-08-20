@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPinIcon } from "@/components/home/icons";
@@ -10,7 +11,18 @@ export interface PlaceCardProps {
 
 export function PlaceCard({ place }: PlaceCardProps) {
   return (
-    <Card className="flex h-full flex-col animate-fade-in">
+    <Card className="flex h-full animate-fade-in flex-col">
+      {place.image !== undefined ? (
+        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-t-2xl">
+          <Image
+            src={place.image}
+            alt={place.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        </div>
+      ) : null}
       <CardHeader className="flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{getPlaceCategoryLabel(place.category)}</Badge>
