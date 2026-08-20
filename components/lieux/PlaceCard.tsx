@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPinIcon } from "@/components/home/icons";
-import { getPlaceCategoryLabel, type Place } from "@/lib/mock/places";
+import { getPlaceCategoryLabel } from "@/lib/mock/places";
+import type { Place } from "@/types";
 
 export interface PlaceCardProps {
   place: Place;

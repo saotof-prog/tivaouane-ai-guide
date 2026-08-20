@@ -2,12 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import {
-  getMockReply,
-  mockSuggestedQuestions,
-  type AssistantMessage,
-  type SuggestedQuestion,
-} from "@/lib/mock/assistant";
+import { getMockReply, mockSuggestedQuestions, type SuggestedQuestion } from "@/lib/mock/assistant";
+import type { ChatMessage as ChatMessageModel } from "@/types";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { SuggestedQuestions } from "./SuggestedQuestions";
@@ -15,7 +11,7 @@ import { TypingIndicator } from "./TypingIndicator";
 
 const BOT_DELAY_MS = 900;
 
-const WELCOME_MESSAGE: AssistantMessage = {
+const WELCOME_MESSAGE: ChatMessageModel = {
   id: "welcome",
   role: "assistant",
   content:
@@ -23,7 +19,7 @@ const WELCOME_MESSAGE: AssistantMessage = {
 };
 
 export function Chat() {
-  const [messages, setMessages] = useState<AssistantMessage[]>([WELCOME_MESSAGE]);
+  const [messages, setMessages] = useState<ChatMessageModel[]>([WELCOME_MESSAGE]);
   const [isTyping, setIsTyping] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

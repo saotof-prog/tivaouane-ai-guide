@@ -1,11 +1,3 @@
-export type AssistantRole = "user" | "assistant";
-
-export type AssistantMessage = {
-  id: string;
-  role: AssistantRole;
-  content: string;
-};
-
 export type SuggestedQuestion = {
   id: string;
   label: string;

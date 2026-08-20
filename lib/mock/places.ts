@@ -1,24 +1,18 @@
+import { normalizeText } from "@/lib/utils";
+import type { Place, PlaceCategoryId } from "@/types";
+
+/** Libellés de catégories de lieux (pour l’affichage des filtres). */
 export const placeCategories = [
   { id: "religieux", label: "Lieux religieux" },
   { id: "marches", label: "Marchés & artisanat" },
   { id: "restauration", label: "Restauration" },
   { id: "hebergement", label: "Hébergement" },
   { id: "espaces", label: "Espaces & places" },
-] as const;
-
-export type PlaceCategoryId = (typeof placeCategories)[number]["id"];
+] as const satisfies readonly { id: PlaceCategoryId; label: string }[];
 
 export function getPlaceCategoryLabel(categoryId: PlaceCategoryId): string {
   return placeCategories.find((category) => category.id === categoryId)?.label ?? categoryId;
 }
-
-export type Place = {
-  id: string;
-  name: string;
-  category: PlaceCategoryId;
-  /** Description d’exemple — aucune donnée vérifiée, à remplacer par la base de connaissances. */
-  description: string;
-};
 
 export const mockPlaces: Place[] = [
   {
@@ -79,20 +73,13 @@ export const mockPlaces: Place[] = [
   },
 ];
 
-function normalize(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
 export type PlaceFilters = {
   query: string;
   category: PlaceCategoryId | "all";
 };
 
 export function filterPlaces(places: Place[], filters: PlaceFilters): Place[] {
-  const query = normalize(filters.query.trim());
+  const query = normalizeText(filters.query.trim());
 
   return places.filter((place) => {
     if (filters.category !== "all" && place.category !== filters.category) {
@@ -100,7 +87,7 @@ export function filterPlaces(places: Place[], filters: PlaceFilters): Place[] {
     }
     if (query.length === 0) return true;
 
-    const haystack = normalize(`${place.name} ${getPlaceCategoryLabel(place.category)}`);
+    const haystack = normalizeText(`${place.name} ${getPlaceCategoryLabel(place.category)}`);
     return haystack.includes(query);
   });
 }

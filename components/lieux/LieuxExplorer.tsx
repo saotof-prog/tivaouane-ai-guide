@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { filterPlaces, mockPlaces, type PlaceCategoryId } from "@/lib/mock/places";
+import { filterPlaces, mockPlaces } from "@/lib/mock/places";
+import type { PlaceCategoryId } from "@/types";
 import { PlaceCard } from "./PlaceCard";
 import { PlaceSearch } from "./PlaceSearch";
 import { CategoryFilter } from "./CategoryFilter";
-import { EmptyState } from "./EmptyState";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PlacesGridSkeleton } from "./PlacesGridSkeleton";
 
 const LOADING_DELAY_MS = 700;
@@ -49,7 +50,11 @@ export function LieuxExplorer() {
       </p>
 
       {places.length === 0 ? (
-        <EmptyState onReset={handleReset} />
+        <EmptyState
+          title="Aucun lieu trouvé"
+          description="Essayez un autre mot-clé ou une autre catégorie pour élargir la recherche."
+          onReset={handleReset}
+        />
       ) : (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {places.map((place) => (

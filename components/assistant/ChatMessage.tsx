@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 import { SparkleIcon, UserIcon } from "@/components/home/icons";
 
-import type { AssistantMessage } from "@/lib/mock/assistant";
+import type { ChatMessage } from "@/types";
 
 export interface ChatMessageProps {
-  message: AssistantMessage;
+  message: ChatMessage;
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
