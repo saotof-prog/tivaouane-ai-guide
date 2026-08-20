@@ -37,6 +37,7 @@ export const mockPlaces: Place[] = [
     category: "marches",
     description:
       "Fiche d’exemple de démonstration — description et informations pratiques à venir avec la base de connaissances.",
+    image: "/images/lieux/marche-central.jpg",
   },
   {
     id: "ateliers-artisanaux",
@@ -44,6 +45,7 @@ export const mockPlaces: Place[] = [
     category: "marches",
     description:
       "Fiche d’exemple de démonstration — description et informations pratiques à venir avec la base de connaissances.",
+    image: "/images/lieux/ateliers-artisanaux.jpg",
   },
   {
     id: "restaurant-du-centre",
