@@ -4,7 +4,7 @@
  * Pipeline : requête utilisateur → validation → récupération du contexte
  * (RAG) → génération par le modèle → réponse structurée avec sources.
  *
- * Aucun contenu de message ni clé d’API n’est journalisé.
+ * Aucun contenu de message ni clé d'API n'est journalisé.
  */
 
 import { NextResponse } from "next/server";
@@ -14,10 +14,11 @@ import {
 } from "@/lib/notebooklm";
 import { AIError, buildChatCompletionMessages, getChatModel, type ChatHistoryEntry } from "@/lib/ai";
 import { buildRetrievalContext, SearchError } from "@/lib/rag";
+import { findLocationByName, generateGoogleMapsEmbedUrl } from "@/lib/map/locations";
 
-import type { ChatResponse, SearchResult, Source } from "@/types";
+import type { ChatResponse, SearchResult, Source, GeographicCoordinates } from "@/types";
 
-/** L’API effectue des appels réseau sortants : runtime Node obligatoire. */
+/** L'API effectue des appels réseau sortants : runtime Node obligatoire. */
 export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 64_000;
@@ -26,7 +27,7 @@ const MAX_HISTORY_MESSAGES = 20;
 const MAX_CONVERSATION_ID_LENGTH = 64;
 const CONVERSATION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 
-/** Payload de chat validé, prêt pour l’orchestration. */
+/** Payload de chat validé, prêt pour l'orchestration. */
 type ValidatedChatRequest = {
   message: string;
   conversationId?: string;
@@ -68,24 +69,24 @@ function validateChatRequest(payload: unknown): ValidationResult {
   const history: ChatHistoryEntry[] = [];
   if (record.history !== undefined) {
     if (!Array.isArray(record.history)) {
-      return { ok: false, problem: "L’historique doit être une liste de messages." };
+      return { ok: false, problem: "L'historique doit être une liste de messages." };
     }
     if (record.history.length > MAX_HISTORY_MESSAGES) {
       return {
         ok: false,
-        problem: `L’historique ne peut pas dépasser ${MAX_HISTORY_MESSAGES} messages.`,
+        problem: `L'historique ne peut pas dépasser ${MAX_HISTORY_MESSAGES} messages.`,
       };
     }
     for (const entry of record.history) {
       if (typeof entry !== "object" || entry === null) {
-        return { ok: false, problem: "Un message de l’historique est invalide." };
+        return { ok: false, problem: "Un message de l'historique est invalide." };
       }
       const { role, content } = entry as Record<string, unknown>;
       if (role !== "user" && role !== "assistant") {
-        return { ok: false, problem: "Un rôle de l’historique est invalide." };
+        return { ok: false, problem: "Un rôle de l'historique est invalide." };
       }
       if (typeof content !== "string" || content.length > MAX_MESSAGE_LENGTH) {
-        return { ok: false, problem: "Un contenu de l’historique est invalide." };
+        return { ok: false, problem: "Un contenu de l'historique est invalide." };
       }
       history.push({ role, content });
     }
@@ -94,7 +95,7 @@ function validateChatRequest(payload: unknown): ValidationResult {
   return { ok: true, value: { message: message.trim(), conversationId, history } };
 }
 
-/** Réponse d’erreur JSON uniforme : { error: { code, message } }. */
+/** Réponse d'erreur JSON uniforme : { error: { code, message } }. */
 function errorResponse(status: number, code: string, message: string): NextResponse {
   return NextResponse.json({ error: { code, message } }, { status });
 }
@@ -111,6 +112,7 @@ function collectSources(results: SearchResult[]): Source[] {
   }
   return sources;
 }
+
 /**
  * Supprime les marqueurs de références générés par NotebookLM.
  * Exemples : [1], [2], [1, 3], [1,2,5]
@@ -122,6 +124,74 @@ function cleanNotebookReferences(text: string): string {
     .replace(/\n[ \t]+/g, "\n")
     .trim();
 }
+
+/** Mots-clés qui indiquent une demande de localisation/itinéraire. */
+const LOCATION_KEYWORDS = [
+  "où",
+  "ou",
+  "situe",
+  "localisation",
+  "adresse",
+  "itinéraire",
+  "itineraire",
+  "chemin",
+  "aller",
+  "direction",
+  "comment aller",
+  "comment se rendre",
+  "se rendre",
+  "trouver",
+  "position",
+  "coordonnées",
+  "coordonnees",
+  "google maps",
+  "maps",
+  "carte",
+  "plan",
+];
+
+/** Détecte si le message demande une localisation. */
+function isLocationQuery(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return LOCATION_KEYWORDS.some((kw) => normalized.includes(kw));
+}
+
+/** Tente de trouver une location mentionnée dans le message. */
+function extractLocationFromMessage(message: string): GeographicCoordinates & { name: string; zoom?: number } | null {
+  const location = findLocationByName(message);
+  if (!location) return null;
+
+  return {
+    latitude: location.coordinates.latitude,
+    longitude: location.coordinates.longitude,
+    name: location.name,
+    zoom: 15,
+  };
+}
+
+/** Génère une introduction contextuelle avec itinéraire pour une localisation. */
+function buildLocationContext(location: GeographicCoordinates & { name: string; zoom?: number }, userMessage: string): string {
+  const embedUrl = generateGoogleMapsEmbedUrl(location.latitude, location.longitude, location.zoom ?? 15);
+
+  const lowerMessage = userMessage.toLowerCase();
+  const wantsDirections = ["comment aller", "comment se rendre", "itinéraire", "itineraire", "direction", "chemin"].some(kw => lowerMessage.includes(kw));
+
+  let intro = `📍 **${location.name}**\n\n`;
+
+  if (wantsDirections) {
+    intro += `Pour vous y rendre depuis le centre de Tivaouane :\n`;
+    intro += `• Prenez la direction du centre-ville\n`;
+    intro += `• Suivez les panneaux indicateurs vers les lieux religieux/patrimoniaux\n`;
+    intro += `• La zone est piétonne aux abords immédiats\n\n`;
+  } else {
+    intro += `Situé au cœur de Tivaouane, ce lieu est facilement accessible depuis le centre-ville.\n\n`;
+  }
+
+  intro += `🗺️ **Carte interactive ci-dessous** — vous pouvez zoomer, déplacer la vue, et cliquer sur « Ouvrir dans Google Maps » pour obtenir un itinéraire précis depuis votre position actuelle.\n`;
+
+  return intro;
+}
+
 export async function POST(request: Request): Promise<NextResponse> {
   let rawBody: string;
   try {
@@ -138,7 +208,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     payload = JSON.parse(rawBody);
   } catch {
-    return errorResponse(400, "validation", "Le corps de la requête n’est pas un JSON valide.");
+    return errorResponse(400, "validation", "Le corps de la requête n'est pas un JSON valide.");
   }
 
   const validated = validateChatRequest(payload);
@@ -163,25 +233,37 @@ export async function POST(request: Request): Promise<NextResponse> {
   const { context, results } = retrieval;
 
   // Production de la réponse par NotebookLM.
-let content: string;
+ let content: string;
 
-try {
-  const notebookResponse = await askNotebookLM(message);
+ try {
+   const notebookResponse = await askNotebookLM(message);
 
-  content = cleanNotebookLMResponse(notebookResponse.answer);
-} catch (cause) {
-  console.error(
-    "[chat] NotebookLM error",
-    cause instanceof Error ? cause.message : cause,
-  );
+   content = cleanNotebookLMResponse(notebookResponse.answer);
+ } catch (cause) {
+   console.error(
+     "[chat] NotebookLM error",
+     cause instanceof Error ? cause.message : cause,
+   );
 
-  return errorResponse(
-    502,
-    "notebooklm",
-    "NotebookLM est momentanément indisponible.",
-  );
-}
- 
+   return errorResponse(
+     502,
+     "notebooklm",
+     "NotebookLM est momentanément indisponible.",
+   );
+ }
+
+  // Détection de demande de localisation et enrichissement
+  let locationData: GeographicCoordinates & { name: string; zoom?: number } | null = null;
+  if (isLocationQuery(message)) {
+    locationData = extractLocationFromMessage(message);
+  }
+
+  // Enrichir le contenu avec le contexte de localisation si trouvé
+  let finalContent = content;
+  if (locationData) {
+    const locationIntro = buildLocationContext(locationData, message);
+    finalContent = `${locationIntro}\n---\n\n${content}`;
+  }
 
   const sources = collectSources(results);
   const responseBody: ChatResponse = {
@@ -189,9 +271,10 @@ try {
     message: {
       id: crypto.randomUUID(),
       role: "assistant",
-      content,
+      content: finalContent,
       createdAt: new Date().toISOString(),
       sources: sources.length > 0 ? sources : undefined,
+      location: locationData ?? undefined,
     },
   };
 

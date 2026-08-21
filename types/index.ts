@@ -39,10 +39,10 @@ export type GeographicCoordinates = {
   longitude: number;
 };
 
-/** Nature de la source d’information. */
+/** Nature de la source d'information. */
 export type SourceType = "livre" | "article" | "site" | "archive" | "interview" | "officiel";
 
-/** Source d’information : référence traçable pour chaque donnée. */
+/** Source d'information : référence traçable pour chaque donnée. */
 export type Source = {
   id: string;
   title: string;
@@ -53,20 +53,20 @@ export type Source = {
   publishedAt?: string;
 };
 
-/** Fiche descriptive d’un lieu de Tivaouane. */
+/** Fiche descriptive d'un lieu de Tivaouane. */
 export type Place = {
   id: string;
   name: string;
   category: PlaceCategoryId;
-  /** Description d’exemple — aucune donnée vérifiée, à remplacer par la base de connaissances. */
+  /** Description d'exemple — aucune donnée vérifiée, à remplacer par la base de connaissances. */
   description: string;
-  /** Chemin public de l’image d’illustration (ex. « /images/lieux/monument.jpg »). */
+  /** Chemin public de l'image d'illustration (ex. "/images/lieux/monument.jpg"). */
   image?: string;
   location?: GeographicCoordinates;
   sources?: Source[];
 };
 
-/** Section éditoriale d’un article du patrimoine. */
+/** Section éditoriale d'un article du patrimoine. */
 export type HeritageSection = {
   heading: string;
   body: string;
@@ -77,11 +77,11 @@ export type HeritageItem = {
   id: string;
   title: string;
   category: HeritageCategoryId;
-  /** Résumé d’exemple, affiché sur la carte. */
+  /** Résumé d'exemple, affiché sur la carte. */
   excerpt: string;
-  /** Corps de l’article (fiche d’exemple uniquement — aucune donnée vérifiée). */
+  /** Corps de l'article (fiche d'exemple uniquement — aucune donnée vérifiée). */
   sections: HeritageSection[];
-  /** Marqueurs courts affichés en pastilles (ex. « Rassemblements »). */
+  /** Marqueurs courts affichés en pastilles (ex. "Rassemblements"). */
   markers?: string[];
   sources?: Source[];
   /** Chemin public de l'image d'illustration. */
@@ -124,21 +124,23 @@ export type SearchQuery = {
   limit?: number;
 };
 
-/** Rôle de l’auteur d’un message de chat. */
+/** Rôle de l'auteur d'un message de chat. */
 export type ChatRole = "user" | "assistant";
 
-/** Message d’une conversation avec l’assistant. */
+/** Message d'une conversation avec l'assistant. */
 export type ChatMessage = {
   id: string;
   role: ChatRole;
   content: string;
   /** Horodatage de création (ISO 8601). */
   createdAt?: string;
-  /** Sources éventuelles citées dans le message de l’assistant. */
+  /** Sources éventuelles citées dans le message de l'assistant. */
   sources?: Source[];
+  /** Coordonnées pour affichage de carte (optionnel). */
+  location?: GeographicCoordinates & { name?: string; zoom?: number };
 };
 
-/** Requête envoyée à l’API de l’assistant. */
+/** Requête envoyée à l'API de l'assistant. */
 export type ChatRequest = {
   message: string;
   conversationId?: string;
@@ -146,7 +148,7 @@ export type ChatRequest = {
   history?: ChatMessage[];
 };
 
-/** Réponse renvoyée par l’API de l’assistant. */
+/** Réponse renvoyée par l'API de l'assistant. */
 export type ChatResponse = {
   message: ChatMessage;
   conversationId?: string;

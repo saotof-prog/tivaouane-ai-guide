@@ -26,7 +26,7 @@ export default function CartePage() {
         {/* Carte plein écran */}
         <Container className="flex-1 px-3 pb-8 sm:px-6">
           <MapView
-            height="h-[calc(100vh-14rem)] min-h-[500px]"
+            height="h-[600px] sm:h-[700px]"
             initialFilters={{ query: "", category: "all" }}
           />
         </Container>

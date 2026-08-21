@@ -33,7 +33,7 @@ export const TIVAOUANE_LOCATIONS: MapLocation[] = [
     category: "religieux",
     description:
       "Édifiée au début du XXᵉ siècle sous l'impulsion d'El Hadji Malick Sy, cœur spirituel de la cité tidiane. Point d'orgue du Gamou annuel.",
-    image: "/images/la cite a explorer/l'esplandade des cérémonies .jpeg",
+    image: "/images/lieux/grande-mosquee.jpg",
   },
   {
     id: "zawiya",
@@ -42,7 +42,7 @@ export const TIVAOUANE_LOCATIONS: MapLocation[] = [
     category: "religieux",
     description:
       "Résidence et lieu de recueillement du khalife général des Tidianes. Lieu de pèlerinage majeur pendant la Ziyara.",
-    image: "/images/la cite a explorer/le mauselee.jpeg",
+    image: "/images/lieux/zawiya.jpg",
   },
   {
     id: "mausolees",
@@ -51,7 +51,7 @@ export const TIVAOUANE_LOCATIONS: MapLocation[] = [
     category: "religieux",
     description:
       "Nécropole des successeurs d'El Hadji Malick Sy. Lieu de méditation et de visite pour les disciples.",
-    image: "/images/la cite a explorer/le mauselee.jpeg",
+    image: "/images/lieux/zawiya.jpg",
   },
   {
     id: "marche-central",
@@ -60,7 +60,7 @@ export const TIVAOUANE_LOCATIONS: MapLocation[] = [
     category: "marches",
     description:
       "Cœur commercial de la ville. Artisanat local, tissus, épices et produits du terroir. Animation quotidienne.",
-    image: "/images/la cite a explorer/le marche central.jpeg",
+    image: "/images/lieux/marche-central.jpg",
   },
   {
     id: "ateliers-artisanaux",
@@ -136,4 +136,42 @@ export function searchLocations(
     const haystack = `${loc.name} ${loc.description ?? ""} ${getCategoryLabel(loc.category)}`.toLowerCase();
     return haystack.includes(normalizedQuery);
   });
+}
+
+/** Trouve un lieu par son identifiant exact. */
+export function findLocationById(id: string): MapLocation | undefined {
+  return TIVAOUANE_LOCATIONS.find((loc) => loc.id === id);
+}
+
+/** Trouve un lieu par nom (recherche floue, insensible à la casse). */
+export function findLocationByName(query: string): MapLocation | undefined {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return undefined;
+
+  // Recherche exacte d'abord
+  let found = TIVAOUANE_LOCATIONS.find(
+    (loc) => loc.name.toLowerCase() === normalized
+  );
+  if (found) return found;
+
+  // Recherche partielle
+  found = TIVAOUANE_LOCATIONS.find((loc) =>
+    loc.name.toLowerCase().includes(normalized)
+  );
+  if (found) return found;
+
+  // Recherche par ID
+  return TIVAOUANE_LOCATIONS.find((loc) => loc.id === normalized);
+}
+
+/** Génère une URL Google Maps Embed pour un lieu. */
+export function generateGoogleMapsEmbedUrl(
+  latitude: number,
+  longitude: number,
+  zoom = 15,
+  language = "fr"
+): string {
+  return `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d${Math.round(
+    156412 * Math.pow(2, 15 - zoom)
+  )}!2d${longitude}!3d${latitude}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1s${language}!2ssn!4v${Date.now()}!5m2!1s${language}!2ssn`;
 }

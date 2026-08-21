@@ -1,6 +1,7 @@
 /**
  * Fournisseur de carte Leaflet (implémentation par défaut).
  * Chargé dynamiquement côté client uniquement (SSR-safe).
+ * Utilise des assets locaux (CSS + images marqueurs) pour éviter les dépendances CDN.
  */
 
 import type { MapProvider, MapProviderProps, MapLocation, Coordinates } from "./types";
@@ -13,37 +14,44 @@ type LeafletMarker = L.Marker;
 type LeafletIcon = L.DivIcon;
 type LeafletTileLayer = L.TileLayer;
 
-/** Charge Leaflet et ses styles côté client. */
+/** URLs des tuiles par thème. */
+const TILE_URLS = {
+  light: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+} as const;
+
+const TILE_ATTRIBUTION = {
+  light: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  dark: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+} as const;
+
+/** Charge Leaflet et ses styles côté client (assets locaux). */
 async function loadLeaflet(): Promise<{
   default: typeof import("leaflet");
-  markerIcon: typeof L.Icon.Default;
-  markerShadow: typeof L.Icon.Default;
 }> {
   if (typeof window === "undefined") {
     throw new Error("Leaflet ne peut être chargé que côté client");
   }
 
-  // Charge le CSS Leaflet une seule fois
-  if (!document.querySelector('link[href*="leaflet.css"]')) {
+  // Charge le CSS Leaflet local une seule fois
+  if (!document.querySelector('link[href*="/leaflet/leaflet.css"]')) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
-    link.crossOrigin = "anonymous";
+    link.href = "/leaflet/leaflet.css";
     document.head.appendChild(link);
   }
 
   const L = await import("leaflet");
 
-  // Fix pour les images de marqueur par défaut (CDN unpkg)
+  // Configurer les URLs des icônes par défaut vers nos assets locaux
   delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
   L.Icon.Default.mergeOptions({
-    iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    iconRetinaUrl: "/leaflet/images/marker-icon-2x.png",
+    iconUrl: "/leaflet/images/marker-icon.png",
+    shadowUrl: "/leaflet/images/marker-shadow.png",
   });
 
-  return { default: L, markerIcon: L.Icon.Default, markerShadow: L.Icon.Default };
+  return { default: L };
 }
 
 /** Crée une icône personnalisée par catégorie. */
@@ -124,6 +132,7 @@ export async function createLeafletMapProvider(container: HTMLElement): Promise<
   const markers = new Map<string, LeafletMarker>();
   let currentProps: MapProviderProps | null = null;
   let selectedLocationId: string | null = null;
+  let currentTheme: "light" | "dark" = "light";
 
   function updateMarkerIcon(location: MapLocation, isSelected: boolean): void {
     const marker = markers.get(location.id);
@@ -148,34 +157,24 @@ export async function createLeafletMapProvider(container: HTMLElement): Promise<
     return colors[category] ?? "#0B5A3A";
   }
 
+  /** Change le thème en changeant la couche de tuiles (pas de filtre CSS). */
   function setTheme(theme: "light" | "dark"): void {
     if (!map || !tileLayer) return;
 
-    // Leaflet n'a pas de thème natif pour OSM, on utilise un filtre CSS sur le conteneur
-    container.style.filter = theme === "dark" ? "invert(90%) hue-rotate(180deg)" : "none";
+    currentTheme = theme;
 
-    // Correction pour les images (marqueurs, popups) qui ne doivent pas être inversées
-    const styleId = "tivaouane-leaflet-theme-fix";
-    let styleEl = document.getElementById(styleId) as HTMLStyleElement;
-    if (!styleEl) {
-      styleEl = document.createElement("style");
-      styleEl.id = styleId;
-      document.head.appendChild(styleEl);
-    }
-    styleEl.textContent = theme === "dark"
-      ? `
-        .leaflet-container .leaflet-marker-icon,
-        .leaflet-container .leaflet-popup-content-wrapper,
-        .leaflet-container .leaflet-popup-tip,
-        .leaflet-container .leaflet-control-zoom,
-        .leaflet-container .leaflet-control-attribution {
-          filter: invert(90%) hue-rotate(180deg) !important;
-        }
-        .leaflet-container .leaflet-popup-content {
-          color: #1C1A15 !important;
-        }
-      `
-      : "";
+    // Remplace la couche de tuiles par celle adaptée au thème
+    const newTileLayer = L.tileLayer(TILE_URLS[theme], {
+      attribution: TILE_ATTRIBUTION[theme],
+      maxZoom: 19,
+      minZoom: 1,
+      detectRetina: true,
+      crossOrigin: true,
+    });
+
+    map.removeLayer(tileLayer);
+    newTileLayer.addTo(map);
+    tileLayer = newTileLayer;
   }
 
   function createMarker(location: MapLocation): LeafletMarker {
@@ -246,6 +245,7 @@ export async function createLeafletMapProvider(container: HTMLElement): Promise<
   return {
     async init(props: MapProviderProps) {
       currentProps = props;
+      currentTheme = props.theme ?? "light";
 
       map = L.map(container, {
         center: [props.initialViewport.center.latitude, props.initialViewport.center.longitude],
@@ -263,17 +263,14 @@ export async function createLeafletMapProvider(container: HTMLElement): Promise<
         preferCanvas: false,
       });
 
-      // Tuiles OpenStreetMap
-      tileLayer = L.tileLayer(props.defaultTileUrl ?? DEFAULT_MAP_CONFIG.defaultTileUrl, {
-        attribution: props.tileAttribution ?? DEFAULT_MAP_CONFIG.tileAttribution,
+      // Tuiles selon le thème initial
+      tileLayer = L.tileLayer(TILE_URLS[currentTheme], {
+        attribution: TILE_ATTRIBUTION[currentTheme],
         maxZoom: 19,
         minZoom: 1,
         detectRetina: true,
         crossOrigin: true,
       }).addTo(map);
-
-      // Thème initial
-      setTheme(props.theme ?? "light");
 
       // Marqueurs initiaux
       props.locations.forEach((loc) => {
@@ -295,7 +292,6 @@ export async function createLeafletMapProvider(container: HTMLElement): Promise<
 
       // Clic sur le fond de carte = désélection
       map.on("click", (e: L.LeafletMouseEvent) => {
-        // Vérifie si le clic est sur un marqueur (popup ouvert)
         const target = e.originalEvent.target as HTMLElement | null;
         const isMarkerClick = target?.closest?.(".leaflet-marker-icon, .leaflet-popup");
         if (!isMarkerClick) {
