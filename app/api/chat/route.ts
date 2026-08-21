@@ -8,7 +8,10 @@
  */
 
 import { NextResponse } from "next/server";
-
+import {
+  askNotebookLM,
+  cleanNotebookLMResponse,
+} from "@/lib/notebooklm";
 import { AIError, buildChatCompletionMessages, getChatModel, type ChatHistoryEntry } from "@/lib/ai";
 import { buildRetrievalContext, SearchError } from "@/lib/rag";
 
@@ -108,7 +111,17 @@ function collectSources(results: SearchResult[]): Source[] {
   }
   return sources;
 }
-
+/**
+ * Supprime les marqueurs de références générés par NotebookLM.
+ * Exemples : [1], [2], [1, 3], [1,2,5]
+ */
+function cleanNotebookReferences(text: string): string {
+  return text
+    .replace(/\[\s*\d+(?:\s*,\s*\d+)*\s*\]/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .trim();
+}
 export async function POST(request: Request): Promise<NextResponse> {
   let rawBody: string;
   try {
@@ -149,35 +162,26 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const { context, results } = retrieval;
 
-  // Production de la réponse par le modèle de langage.
-  let chatModel;
-  try {
-    chatModel = getChatModel();
-  } catch (cause) {
-    if (cause instanceof AIError) {
-      console.error(`[chat] modèle indisponible (${cause.code})`);
-      return cause.code === "configuration"
-        ? errorResponse(500, "configuration", cause.message)
-        : errorResponse(502, "provider", cause.message);
-    }
-    console.error("[chat] erreur inattendue de configuration", (cause as Error).message);
-    return errorResponse(500, "internal", "Une erreur interne est survenue.");
-  }
+  // Production de la réponse par NotebookLM.
+let content: string;
 
-  let content: string;
-  try {
-    content = await chatModel.complete(
-      buildChatCompletionMessages({ userMessage: message, history, context }),
-    );
-  } catch (cause) {
-    if (cause instanceof AIError) {
-      console.error(`[chat] génération impossible (${cause.code})`);
-      const status = cause.code === "configuration" ? 500 : 502;
-      return errorResponse(status, cause.code, cause.message);
-    }
-    console.error("[chat] erreur inattendue du modèle", (cause as Error).message);
-    return errorResponse(500, "internal", "Une erreur interne est survenue.");
-  }
+try {
+  const notebookResponse = await askNotebookLM(message);
+
+  content = cleanNotebookLMResponse(notebookResponse.answer);
+} catch (cause) {
+  console.error(
+    "[chat] NotebookLM error",
+    cause instanceof Error ? cause.message : cause,
+  );
+
+  return errorResponse(
+    502,
+    "notebooklm",
+    "NotebookLM est momentanément indisponible.",
+  );
+}
+ 
 
   const sources = collectSources(results);
   const responseBody: ChatResponse = {
